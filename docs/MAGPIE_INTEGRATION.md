@@ -25,8 +25,8 @@ magpie 是一个本地模型路由网关，跑起来后在 `http://127.0.0.1:342
 ## 2. 配置本项目
 
 ```bash
-git clone <本仓库地址> ziwei-doushu-magpie
-cd ziwei-doushu-magpie
+git clone https://github.com/mz579/ziwei-magpie.git
+cd ziwei-magpie
 npm install            # 若在受限沙箱里报 spawn/EPERM，可加 --ignore-scripts
 cp .env.example .env.local
 ```

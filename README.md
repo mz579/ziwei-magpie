@@ -55,8 +55,8 @@
 
 ```bash
 # 1) 克隆 + 安装
-git clone https://github.com/mz579/ziwei-doushu-magpie.git
-cd ziwei-doushu-magpie
+git clone https://github.com/mz579/ziwei-magpie.git
+cd ziwei-magpie
 npm install                # 若在受限沙箱里报 EPERM，可改用：npm install --ignore-scripts
 
 # 2) 配置（复制模板后填写）
