@@ -2,6 +2,13 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Star } from '@/lib/ziwei/types';
 import { STAR_DESCRIPTIONS } from '@/lib/ziwei/constants';
+import { getStarGlossary } from '@/lib/ziwei/star-glossary';
+
+// 已在下方「辅星/煞星说明」行内专门写过的星（避免与通用释义重复）
+const INLINE_COVERED = new Set([
+  '文昌', '文曲', '左辅', '右弼', '天魁', '天钺', '禄存', '天马',
+  '地空', '地劫', '火星', '铃星', '擎羊', '陀罗',
+]);
 
 interface StarDetailPanelProps {
   star: Star | null;
@@ -295,6 +302,13 @@ export default function StarDetailPanel({ star, palaceName, onClose }: StarDetai
                   </div>
                 </div>
               </>
+            )}
+
+            {/* 辅星/煞星通用释义（未在下方行内专门说明的星） */}
+            {!detail && star.type !== 'major' && !INLINE_COVERED.has(star.name) && (
+              <div className="text-xs leading-relaxed" style={{ color: 'var(--t-text2)' }}>
+                {getStarGlossary(star.name) || '该类星曜暂未收录独立释义，请结合所在宫位与三方四正综合判断。'}
+              </div>
             )}
 
             {/* 辅星/煞星说明 */}
