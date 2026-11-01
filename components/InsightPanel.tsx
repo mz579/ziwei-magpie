@@ -209,12 +209,7 @@ export default function InsightPanel({ chart, selectedPalace, selectedSiHua }: I
     }
   }, [messages]);
 
-  // Auto-generate 命格总览 on mount
-  useEffect(() => {
-    if (autoLoaded.current) return;
-    autoLoaded.current = true;
-    sendMessage(TOPIC_PROMPTS.overview, true);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // 对话优先：打开命盘不自动生成，等用户发问
 
   // Inject palace analysis when palace selected
   useEffect(() => {
@@ -227,21 +222,9 @@ export default function InsightPanel({ chart, selectedPalace, selectedSiHua }: I
       : '空宫（借对宫）';
     const role = PALACE_ROLES[selectedPalace.name] ?? '';
 
-    const prompt = `请重点分析【${selectedPalace.name}】（主管：${role}），该宫主星为${starDesc}，按以下结构输出：
-
-**【宫位定性】**
-${selectedPalace.name}在命盘中的意义，以及这种星曜配置的整体判断。
-
-**【主星解读】**
-主星在此宫的倪海厦体系解读，引用具体观点。
-
-**【三方四正联动】**
-三方四正宫位对此宫的影响。
-
-**【实际建议】**
-基于此宫的具体建议。`;
-
-    openSession(`palace:${selectedPalace.branch}`, prompt);
+    // 对话优先：点宫位只把问题填进输入框，不自动请求
+    setActiveTopic(`palace:${selectedPalace.branch}`);
+    setInput(`请分析我的【${selectedPalace.name}】（主管：${role}）；该宫主星为${starDesc}。`);
   }, [selectedPalace]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 注入四化飞化分析
@@ -258,24 +241,9 @@ ${selectedPalace.name}在命盘中的意义，以及这种星曜配置的整体�
     const palaceName = palaceOfStar?.name ?? '未知宫位';
     const viewLabel = selectedSiHua.view === 'daxian' ? '大限' : '流年';
 
-    const prompt = `请分析【${viewLabel}${selectedSiHua.starName}化${selectedSiHua.siHua}】的飞化影响，按以下结构输出：
-
-**【化${selectedSiHua.siHua}基本含义】**
-化${selectedSiHua.siHua}在倪海厦体系中的核心含义，以及${selectedSiHua.starName}化${selectedSiHua.siHua}的特殊含义。
-
-**【落宫影响】**
-${selectedSiHua.starName}化${selectedSiHua.siHua}落在【${palaceName}】，该宫主管的领域受到何种影响，倪师如何解读。
-
-**【三方四正飞化路径】**
-化${selectedSiHua.siHua}入${palaceName}后，对其三方四正（对宫、两个三合宫）的联动影响。
-
-**【当前运势影响】**
-在${viewLabel}时间维度下，此化${selectedSiHua.siHua}对命主近期运势的具体影响。
-
-**【实际建议】**
-基于此四化的具体可操作建议。`;
-
-    openSession(`sihua:${key}`, prompt);
+    // 对话优先：点四化只把问题填进输入框，不自动请求
+    setActiveTopic(`sihua:${key}`);
+    setInput(`请分析【${viewLabel}${selectedSiHua.starName}化${selectedSiHua.siHua}】落在【${palaceName}】的飞化影响。`);
   }, [selectedSiHua]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const streamResponse = async (apiMessages: { role: 'user' | 'assistant'; content: string }[]) => {
@@ -340,34 +308,25 @@ ${selectedSiHua.starName}化${selectedSiHua.siHua}落在【${palaceName}】，�
     streamResponse(apiMessages);
   };
 
-  // 在「独立会话」里生成回复（话题/宫位/四化各一份，互不累加）
-  const generateIn = (key: string, text: string, base: Message[]) => {
-    if (loadingRef.current) return;
-    loadingRef.current = true;
-    setLoading(true);
-    const userMsg: Message = { role: 'user', content: text, hidden: true };
-    const next = [...base, userMsg];
-    setMessages(next);
-    cacheRef.current[key] = next;
-    const apiMessages = next.map((m) => ({ role: m.role, content: m.content }));
-    streamResponse(apiMessages);
-  };
-
-  const openSession = (key: string, prompt: string) => {
-    if (loadingRef.current) return;
-    const cached = cacheRef.current[key];
-    setActiveTopic(key);
-    if (cached && cached.length) {
-      setMessages(cached); // 已生成过：直接切换显示，不重复请求
-      return;
-    }
-    setMessages([]);
-    generateIn(key, prompt, []);
+  // 六个话题 = 快捷提问：只把示例问题填进输入框（不自动请求）
+  const SAMPLE_QUESTIONS: Record<string, string> = {
+    overview: '请先说说我的命格格局与性格特点。',
+    love: '我的感情婚姻运势如何？',
+    career: '我的事业方向与适合的行业是什么？',
+    wealth: '我的财运特点与求财方式？',
+    health: '我的健康需要留意什么？',
+    personality: '我的性格优点和容易踩的坑是什么？',
   };
 
   const handleTopicClick = (topicKey: string) => {
-    if (loadingRef.current) return;
-    openSession(topicKey, TOPIC_PROMPTS[topicKey]);
+    setActiveTopic(topicKey);
+    setInput(SAMPLE_QUESTIONS[topicKey] ?? '');
+  };
+
+  // 「生成完整报告」：仅当用户显式点击时才跑整块结构化解读
+  const handleFullReport = () => {
+    const prompt = TOPIC_PROMPTS[activeTopic] ?? TOPIC_PROMPTS.overview;
+    sendMessage(prompt, true);
   };
 
   const handleSend = () => {
@@ -408,11 +367,13 @@ ${selectedSiHua.starName}化${selectedSiHua.siHua}落在【${palaceName}】，�
       {/* ── Messages ── */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
 
-        {/* Loading state before first message */}
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="text-4xl mb-3" style={{ color: 'var(--t-gold)', opacity: 0.1 }}>✦</div>
-            <p className="text-[10px] animate-pulse" style={{ color: 'var(--t-faint)' }}>命格解读生成中…</p>
+          <div className="flex flex-col items-center justify-center h-full text-center px-6">
+            <div className="text-4xl mb-3" style={{ color: 'var(--t-gold)', opacity: 0.15 }}>✦</div>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--t-faint)' }}>
+              命盘已生成。像请教一位先生那样，直接问你想知道的就好——<br />
+              先给结论，再按你的追问慢慢展开。
+            </p>
           </div>
         )}
 
@@ -466,6 +427,17 @@ ${selectedSiHua.starName}化${selectedSiHua.siHua}落在【${palaceName}】，�
 
       {/* ── Input ── */}
       <div className="flex-shrink-0 px-3 pb-3 pt-2" style={{ borderTop: '1px solid var(--t-border)' }}>
+        <div className="flex justify-end mb-1.5">
+          <button
+            type="button"
+            onClick={handleFullReport}
+            disabled={loading}
+            className="text-[10px]"
+            style={{ color: 'var(--t-gold)', background: 'transparent', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 0.85 }}
+          >
+            ⚡ 生成完整报告
+          </button>
+        </div>
         <div className="flex gap-2">
           <input
             type="text"
