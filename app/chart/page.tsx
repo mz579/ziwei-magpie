@@ -116,7 +116,7 @@ export default function ChartPage() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ width: 'min(92vw, 440px)', maxHeight: '82vh', overflow: 'auto', borderRadius: 16, background: 'var(--t-bg, #0b1020)', boxShadow: '0 20px 60px rgba(0,0,0,0.35)' }}
+            style={{ width: 'min(92vw, 440px)', maxHeight: '82vh', overflow: 'auto', borderRadius: 16, background: '#ffffff', color: '#1a1a18', boxShadow: '0 20px 60px rgba(0,0,0,0.35)' }}
           >
             {selectedStar ? (
               <StarDetailPanel star={selectedStar} palaceName={starPalaceName} onClose={() => setSelectedStar(null)} />
