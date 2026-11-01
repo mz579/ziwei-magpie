@@ -33,6 +33,7 @@
   - 面板**固定高度内部滚动**，左侧命盘常驻可见。
 - `app/chart/page.tsx`：固定高度网格布局；接入保存盘菜单。
 - `components/BirthForm.tsx`：原生下拉 → **自定义可滚动下拉**（`SelectMenu`）；日期按**年月 / 闰年动态天数**（闰年 2 月 29、30 天月等）。
+- `components/ChartBoard.tsx` / `PalaceCell.tsx`：命盘上的**星名、宫名、空宫、四化可点击** → 弹出释义（星曜用 `StarDetailPanel`，含倪师解读 + 古书原文出处；术语用 `lib/ziwei/glossary.ts` + `TermCard`）。
 - `app/heming/page.tsx`、`components/ChatPanel.tsx`：嵌入模型选择器。
 
 ### 四、文档与工程

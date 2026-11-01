@@ -6,7 +6,10 @@ import InsightPanel from '@/components/InsightPanel';
 import TimeNav, { type TimeView } from '@/components/TimeNav';
 import { generateChart } from '@/lib/ziwei/algorithm';
 import SavedChartMenu from '@/components/SavedChartMenu';
-import type { BirthInfo, ZiweiChart, Palace } from '@/lib/ziwei/types';
+import StarDetailPanel from '@/components/StarDetailPanel';
+import TermCard from '@/components/TermCard';
+import { getTermInfo, type TermInfo } from '@/lib/ziwei/glossary';
+import type { BirthInfo, ZiweiChart, Palace, Star } from '@/lib/ziwei/types';
 
 /**
  * 命盘页 —— 开源版「排盘引擎 Demo」
@@ -23,6 +26,12 @@ export default function ChartPage() {
   const [selectedPalace, setSelectedPalace] = useState<Palace | null>(null);
   const [view, setView] = useState<TimeView>('mingpan');
   const [liunianYear, setLiunianYear] = useState(() => new Date().getFullYear());
+
+  // 术语释义弹窗
+  const [selectedStar, setSelectedStar] = useState<Star | null>(null);
+  const [starPalaceName, setStarPalaceName] = useState<string | undefined>(undefined);
+  const [termInfo, setTermInfo] = useState<TermInfo | null>(null);
+  const closeGlossary = () => { setSelectedStar(null); setTermInfo(null); };
 
   // 载入「我的盘」：用保存的出生信息重新排盘
   const handlePick = (b: BirthInfo) => {
@@ -88,12 +97,35 @@ export default function ChartPage() {
         }}
       >
         <div style={{ height: '100%', minHeight: 0, overflowY: 'auto' }}>
-          <ChartBoard chart={chart} onPalaceSelect={setSelectedPalace} />
+          <ChartBoard
+          chart={chart}
+          onPalaceSelect={setSelectedPalace}
+          onStarSelect={(star, palace) => { setSelectedStar(star); setStarPalaceName(palace.name); setTermInfo(null); }}
+          onTermClick={(term) => { setTermInfo(getTermInfo(term)); setSelectedStar(null); }}
+        />
         </div>
         <div style={{ height: '100%', minHeight: 0, overflow: 'hidden' }}>
           <InsightPanel chart={chart} selectedPalace={selectedPalace} />
         </div>
       </div>
+
+      {(selectedStar || termInfo) && (
+        <div
+          onClick={closeGlossary}
+          style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: 'min(92vw, 440px)', maxHeight: '82vh', overflow: 'auto', borderRadius: 16, background: 'var(--t-bg, #0b1020)', boxShadow: '0 20px 60px rgba(0,0,0,0.35)' }}
+          >
+            {selectedStar ? (
+              <StarDetailPanel star={selectedStar} palaceName={starPalaceName} onClose={() => setSelectedStar(null)} />
+            ) : termInfo ? (
+              <TermCard info={termInfo} onClose={() => setTermInfo(null)} />
+            ) : null}
+          </div>
+        </div>
+      )}
     </main>
   );
 }

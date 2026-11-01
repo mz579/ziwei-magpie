@@ -17,6 +17,8 @@ interface PalaceCellProps {
   overlayLabel?: string;
   /** 点击叠加四化 badge 回调 */
   onSiHuaClick?: (starName: string, siHua: string) => void;
+  /** 点击术语（宫名 / 空宫 / 四化等）回调 */
+  onTermClick?: (term: string) => void;
 }
 
 const SIHUA_STYLES: Record<string, string> = {
@@ -55,7 +57,7 @@ const SiHuaBadge = ({
 
 export default function PalaceCell({
   palace, onClick, onStarClick, isSelected, isSanFang, delay = 0,
-  overlayStarSiHua, overlayLabel, onSiHuaClick,
+  overlayStarSiHua, overlayLabel, onSiHuaClick, onTermClick,
 }: PalaceCellProps) {
   const { branch, stem, name, stars, daXianAge, isCurrentDaXian, isMingGong, isShenGong } = palace;
   const ganzhi = `${STEMS[stem]}${BRANCHES[branch]}`;
@@ -108,7 +110,9 @@ export default function PalaceCell({
         <span className={clsx('text-[10px] font-medium tracking-wide',
           isMingGong ? 'text-amber-500' : isShenGong ? 'text-sky-500' : ''
         )}
-          style={!isMingGong && !isShenGong ? { color: 'var(--t-faint)' } : undefined}
+          onClick={e => { e.stopPropagation(); onTermClick?.(name); }}
+          style={{ cursor: 'pointer', ...(!isMingGong && !isShenGong ? { color: 'var(--t-faint)' } : {}) }}
+          title="点击查看释义"
         >
           {name}
         </span>
@@ -126,7 +130,11 @@ export default function PalaceCell({
       {/* 主星 */}
       <div className="flex flex-col gap-0.5 flex-1">
         {majorStars.length === 0 && (
-          <span className="text-[10px] italic" style={{ color: 'var(--t-faint)', opacity: 0.6 }}>空宫</span>
+          <span className="text-[10px] italic"
+            onClick={e => { e.stopPropagation(); onTermClick?.('空宫'); }}
+            style={{ color: 'var(--t-faint)', opacity: 0.6, cursor: 'pointer', textDecoration: 'underline dotted' }}
+            title="点击查看释义"
+          >空宫</span>
         )}
         {majorStars.map((star) => {
           const overlaySiHua = overlayStarSiHua?.[star.name];
@@ -142,7 +150,7 @@ export default function PalaceCell({
               )}>
                 {star.name}
               </span>
-              {star.siHua && <SiHuaBadge siHua={star.siHua} />}
+              {star.siHua && <SiHuaBadge siHua={star.siHua} onClick={e => { e.stopPropagation(); onTermClick?.('化' + star.siHua); }} />}
               {overlaySiHua && (
                 <SiHuaBadge
                   siHua={overlaySiHua}
@@ -165,9 +173,10 @@ export default function PalaceCell({
           {luckyStars.map(s => {
             const overlaySiHua = overlayStarSiHua?.[s.name];
             return (
-              <span key={s.name} className="inline-flex items-center text-[9px] text-sky-500/70 leading-tight">
+              <span key={s.name} className="inline-flex items-center text-[9px] text-sky-500/70 leading-tight"
+                onClick={e => { e.stopPropagation(); onStarClick?.(s); }} style={{ cursor: 'pointer' }} title="点击查看释义">
                 {s.name}
-                {s.siHua && <SiHuaBadge siHua={s.siHua} />}
+                {s.siHua && <SiHuaBadge siHua={s.siHua} onClick={e => { e.stopPropagation(); onTermClick?.('化' + s.siHua); }} />}
                 {overlaySiHua && (
                   <SiHuaBadge
                     siHua={overlaySiHua}
@@ -189,8 +198,9 @@ export default function PalaceCell({
       {shaStars.length > 0 && (
         <div className="flex flex-wrap gap-x-1">
           {shaStars.map(s => (
-            <span key={s.name} className="text-[9px] text-red-500/60 leading-tight">
-              {s.name}{s.siHua && <SiHuaBadge siHua={s.siHua} />}
+            <span key={s.name} className="text-[9px] text-red-500/60 leading-tight"
+              onClick={e => { e.stopPropagation(); onStarClick?.(s); }} style={{ cursor: 'pointer' }} title="点击查看释义">
+              {s.name}{s.siHua && <SiHuaBadge siHua={s.siHua} onClick={e => { e.stopPropagation(); onTermClick?.('化' + s.siHua); }} />}
             </span>
           ))}
         </div>
