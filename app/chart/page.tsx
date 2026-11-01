@@ -5,6 +5,7 @@ import ChartBoard from '@/components/ChartBoard';
 import InsightPanel from '@/components/InsightPanel';
 import TimeNav, { type TimeView } from '@/components/TimeNav';
 import { generateChart } from '@/lib/ziwei/algorithm';
+import SavedChartMenu from '@/components/SavedChartMenu';
 import type { BirthInfo, ZiweiChart, Palace } from '@/lib/ziwei/types';
 
 /**
@@ -23,6 +24,18 @@ export default function ChartPage() {
   const [view, setView] = useState<TimeView>('mingpan');
   const [liunianYear, setLiunianYear] = useState(() => new Date().getFullYear());
 
+  // 载入「我的盘」：用保存的出生信息重新排盘
+  const handlePick = (b: BirthInfo) => {
+    try {
+      setChart(generateChart(b));
+      setSelectedPalace(null);
+    } catch (e) {
+      if (typeof window !== 'undefined') {
+        window.alert('该盘数据无法起盘：' + (e instanceof Error ? e.message : String(e)));
+      }
+    }
+  };
+
   // ── 未起盘：展示出生信息表单 ──
   if (!chart) {
     return (
@@ -33,6 +46,9 @@ export default function ChartPage() {
           <br />
           （本页为引擎 Demo，完整商业版界面不在开源范围；排盘内核完全开放。）
         </p>
+        <div style={{ marginBottom: 16 }}>
+          <SavedChartMenu onPick={handlePick} />
+        </div>
         <BirthForm onSubmit={(info: BirthInfo) => setChart(generateChart(info))} />
       </main>
     );
@@ -41,16 +57,19 @@ export default function ChartPage() {
   // ── 已起盘：命盘 + 解读 ──
   return (
     <main style={{ maxWidth: 1280, margin: '0 auto', padding: '24px 16px' }}>
-      <button
-        type="button"
-        onClick={() => { setChart(null); setSelectedPalace(null); }}
-        style={{
-          marginBottom: 16, padding: '6px 14px', cursor: 'pointer',
-          border: '1px solid #ccc', borderRadius: 8, background: 'transparent',
-        }}
-      >
-        ← 重新起盘
-      </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+        <button
+          type="button"
+          onClick={() => { setChart(null); setSelectedPalace(null); }}
+          style={{
+            padding: '6px 14px', cursor: 'pointer',
+            border: '1px solid #ccc', borderRadius: 8, background: 'transparent',
+          }}
+        >
+          ← 重新起盘
+        </button>
+        <SavedChartMenu current={chart.birthInfo} onPick={handlePick} />
+      </div>
 
       <TimeNav
         chart={chart}
