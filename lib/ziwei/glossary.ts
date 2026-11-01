@@ -10,6 +10,8 @@ export interface TermInfo {
   source?: string;
 }
 
+import { STAR_DESCRIPTIONS } from './constants';
+
 const SRC = '《紫微斗数全书》体系通用定义（倪海厦《天纪》沿用）';
 
 const SIHUA: Record<string, string> = {
@@ -41,6 +43,7 @@ const TERMS: Record<string, string> = {
   借对宫: '空宫无主星时，借用对宫（对面的宫位）的主星作参考来看此宫。',
   大限: '十年一运的运势分段（本命大限），代表该阶段的人生主题与重心。',
   流年: '以当年干支所看的「一年运势」。',
+  本命: '本命盘以出生时间起盘，看你一生的基本格局；大限看十年运势，流年看当年运势，三者层层叠加。',
   五行局: '依命宫干支的纳音定出「水二局 / 木三局 / 金四局 / 土五局 / 火六局」，用于起大限与安紫微星。',
   命主: '由命宫地支定出的本命主星，象征本命的核心气质。',
   身主: '由生年地支定出的身主星，偏后天的作为与表现。',
@@ -56,6 +59,22 @@ function normalize(t: string): string {
 export function getTermInfo(raw: string): TermInfo {
   const t = normalize(raw);
   const sihuaKey = t.startsWith('化') ? t : `化${t}`;
+  // 「天同化禄」这类：星 + 四化 组合
+  const m = t.match(/^(.+?)化(禄|权|科|忌)$/);
+  if (m) {
+    const star = m[1];
+    const hua = m[2];
+    const desc = STAR_DESCRIPTIONS[star];
+    const starLine = desc
+      ? `「${star}」：${desc.keywords}（${desc.nature}·属${desc.element}）。`
+      : `「${star}」。`;
+    return {
+      title: `${star}化${hua}`,
+      tag: '四化',
+      meaning: `${starLine}此处于「化${hua}」：${SIHUA['化' + hua]}`,
+      source: SRC,
+    };
+  }
   if (SIHUA[t]) return { title: t, tag: '四化', meaning: SIHUA[t], source: SRC };
   if (SIHUA[sihuaKey]) return { title: sihuaKey, tag: '四化', meaning: SIHUA[sihuaKey], source: SRC };
   if (PALACES[t]) return { title: t, tag: '宫位', meaning: PALACES[t], source: SRC };

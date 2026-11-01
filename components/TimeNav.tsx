@@ -11,6 +11,7 @@ interface TimeNavProps {
   liunianYear: number;
   onViewChange: (view: TimeView) => void;
   onYearChange: (year: number) => void;
+  onTermClick?: (term: string) => void;
 }
 
 /** 由年份计算天干索引 (0-9) */
@@ -43,6 +44,7 @@ export default function TimeNav({
   liunianYear,
   onViewChange,
   onYearChange,
+  onTermClick,
 }: TimeNavProps) {
   const currentDx = chart.daXians[chart.currentDaXianIndex];
 
@@ -150,14 +152,25 @@ export default function TimeNav({
           transition={{ duration: 0.2 }}
           className="flex items-center gap-2 mt-1.5 px-1 flex-wrap"
         >
-          <span className="text-[9px]" style={{ color: 'var(--t-faint)' }}>
+          <span
+            className="text-[9px] cursor-pointer"
+            style={{ color: 'var(--t-faint)' }}
+            onClick={() => onTermClick?.(view === 'daxian' ? '大限' : '流年')}
+            title="点击查看释义"
+          >
             {view === 'daxian' ? '大限' : `${liunianYear}`}·{overlayInfo.stemName}年四化：
           </span>
           {(['禄', '权', '科', '忌'] as const).map(sh => {
             const starName = Object.keys(overlayInfo.overlay).find(k => overlayInfo.overlay[k] === sh);
             if (!starName) return null;
             return (
-              <span key={sh} className="text-[9px] font-medium" style={{ color: SIHUA_COLORS[sh] }}>
+              <span
+                key={sh}
+                className="text-[9px] font-medium cursor-pointer"
+                style={{ color: SIHUA_COLORS[sh] }}
+                onClick={() => onTermClick?.(`${starName}化${sh}`)}
+                title="点击查看释义"
+              >
                 {starName}化{sh}
               </span>
             );

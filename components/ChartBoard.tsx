@@ -97,6 +97,7 @@ export default function ChartBoard({ chart, onStarSelect, onPalaceSelect, onSiHu
         liunianYear={liunianYear}
         onViewChange={setTimeView}
         onYearChange={setLiunianYear}
+        onTermClick={onTermClick}
       />
 
       {/* 命盘标题 */}
