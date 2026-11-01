@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> **本仓库是 [Renhuai123/ziwei-doushu](https://github.com/Renhuai123/ziwei-doushu) 的二次开发版（Fork）**：补齐了 AI 后端接口，接入 [magpie](https://github.com/yetone/magpie) 本地模型网关，支持**应用内一键切换模型**，并优化了起盘表单与解读面板体验。
+> 👉 安装与使用详见 **[docs/MAGPIE_INTEGRATION.md](./docs/MAGPIE_INTEGRATION.md)**。（原开源版不含 AI；命理内容仅供参考。）
+
 <div align="center">
 
 # 紫微斗数 · 开源排盘引擎
