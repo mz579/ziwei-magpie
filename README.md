@@ -274,6 +274,28 @@ Expand-Archive combined.zip
 
 ## 三、快速开始
 
+### 本仓库（magpie 版，带 AI 解读）
+
+> 本仓库是 fork，已内置 AI 后端接口，配合 [magpie](https://github.com/yetone/magpie) 本地网关即可使用 AI 解读 / 合盘。
+
+```bash
+# 0) 先安装并运行 magpie（https://usemagpie.ai），默认网关 http://127.0.0.1:3425
+git clone https://github.com/mz579/ziwei-doushu-magpie.git
+cd ziwei-doushu-magpie
+npm install
+cp .env.example .env.local
+# 编辑 .env.local，填入：
+#   MAGPIE_BASE_URL=http://127.0.0.1:3425/v1
+#   MAGPIE_API_KEY=magpie
+#   MAGPIE_MODEL=auto/deepseek-v4.1-flash
+npm run dev -- -H 127.0.0.1
+# 打开 http://127.0.0.1:3000
+```
+
+详细步骤（magpie 安装、换模型、接口说明、许可）见 **[docs/MAGPIE_INTEGRATION.md](./docs/MAGPIE_INTEGRATION.md)**。
+
+### 原版排盘（不含 AI）
+
 ```bash
 # 克隆
 git clone https://github.com/Renhuai123/ziwei-doushu.git
