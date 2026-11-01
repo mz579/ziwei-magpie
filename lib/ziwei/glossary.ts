@@ -44,6 +44,7 @@ const TERMS: Record<string, string> = {
   五行局: '依命宫干支的纳音定出「水二局 / 木三局 / 金四局 / 土五局 / 火六局」，用于起大限与安紫微星。',
   命主: '由命宫地支定出的本命主星，象征本命的核心气质。',
   身主: '由生年地支定出的身主星，偏后天的作为与表现。',
+  身宫: '身宫代表后天（成年后）的作为与重心，与命宫一先一后，两宫合看更完整。',
   三方四正: '指本宫、对宫、以及两个三合宫，共四个宫位，合看吉凶与联动。',
   四化: '禄、权、科、忌四种能量变化，源自十天干「化星」，用来表现动态的吉凶走向。',
 };
@@ -59,6 +60,10 @@ export function getTermInfo(raw: string): TermInfo {
   if (SIHUA[sihuaKey]) return { title: sihuaKey, tag: '四化', meaning: SIHUA[sihuaKey], source: SRC };
   if (PALACES[t]) return { title: t, tag: '宫位', meaning: PALACES[t], source: SRC };
   if (TERMS[t]) return { title: t, tag: '术语', meaning: TERMS[t], source: SRC };
+  // 「土五局 / 木三局 …」等五行局
+  if (/局$/.test(t)) {
+    return { title: t, tag: '五行局', meaning: TERMS['五行局'], source: SRC };
+  }
   // 「XX宫」→ 去掉「宫」再匹配（如 财帛宫 → 财帛）
   if (t.endsWith('宫') && PALACES[t.slice(0, -1)]) {
     const k = t.slice(0, -1);

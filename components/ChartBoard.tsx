@@ -162,9 +162,9 @@ export default function ChartBoard({ chart, onStarSelect, onPalaceSelect, onSiHu
           <div className="text-center space-y-1">
             <div className="text-[9px] tracking-[0.3em] font-medium" style={{ color: 'var(--t-gold)' }}>紫微斗数</div>
             <div className="text-[10px] space-y-0.5" style={{ color: 'var(--t-faint)' }}>
-              <div>命宫 <span style={{ color: 'var(--t-gold)', opacity: 0.7 }}>{BRANCHES[chart.mingGongBranch]}</span></div>
-              <div>身宫 <span className="text-sky-500/70">{BRANCHES[chart.shenGongBranch]}</span></div>
-              <div className="text-[9px]" style={{ color: 'var(--t-gold)', opacity: 0.75 }}>{chart.wuxingJuName}</div>
+              <div onClick={e => { e.stopPropagation(); onTermClick?.('命宫'); }} style={{ cursor: 'pointer' }} title="点击查看释义">命宫 <span style={{ color: 'var(--t-gold)', opacity: 0.7 }}>{BRANCHES[chart.mingGongBranch]}</span></div>
+              <div onClick={e => { e.stopPropagation(); onTermClick?.('身宫'); }} style={{ cursor: 'pointer' }} title="点击查看释义">身宫 <span className="text-sky-500/70">{BRANCHES[chart.shenGongBranch]}</span></div>
+              <div className="text-[9px]" onClick={e => { e.stopPropagation(); onTermClick?.(chart.wuxingJuName); }} style={{ color: 'var(--t-gold)', opacity: 0.75, cursor: 'pointer', textDecoration: 'underline dotted' }} title="点击查看释义">{chart.wuxingJuName}</div>
             </div>
           </div>
 
@@ -276,9 +276,9 @@ export default function ChartBoard({ chart, onStarSelect, onPalaceSelect, onSiHu
           { h: '化科', c: 'text-yellow-500 border-yellow-500/30' },
           { h: '化忌', c: 'text-red-500 border-red-500/30' },
         ].map(({ h, c }) => (
-          <span key={h} className={`border px-1.5 py-0.5 rounded-full font-medium ${c}`}>{h}</span>
+          <span key={h} className={`border px-1.5 py-0.5 rounded-full font-medium cursor-pointer ${c}`} onClick={() => onTermClick?.(h)} title="点击查看释义">{h}</span>
         ))}
-        <span className="px-1.5 py-0.5 rounded-full" style={{ color: 'var(--t-faint)', border: '1px solid var(--t-border)' }}>
+        <span className="px-1.5 py-0.5 rounded-full cursor-pointer" onClick={() => onTermClick?.('三方四正')} style={{ color: 'var(--t-faint)', border: '1px solid var(--t-border)' }} title="点击查看释义">
           点击宫位看三方四正
         </span>
       </motion.div>
