@@ -43,23 +43,48 @@
 
 ---
 
-## 快速开始
+## 部署到自己的电脑（约 5 分钟）
+
+### 前置条件
+- **Node.js ≥ 20**（推荐 20 / 22 / 24）与 npm；
+- 已安装并运行 **[magpie](https://usemagpie.ai)**（本地模型网关，默认地址 `http://127.0.0.1:3425`），并在 magpie 里添加至少一个模型提供商（DeepSeek / Kimi / 智谱 GLM 等，填你自己的 Key，或登录订阅账号）。
+
+> 本项目**不含任何密钥**，也不会上传你的命盘数据；AI 能力来自你本机的 magpie。
+
+### 三步跑起来
 
 ```bash
-# 0) 先安装并运行 magpie（https://usemagpie.ai），默认网关 http://127.0.0.1:3425
+# 1) 克隆 + 安装
 git clone https://github.com/mz579/ziwei-doushu-magpie.git
 cd ziwei-doushu-magpie
-npm install
+npm install                # 若在受限沙箱里报 EPERM，可改用：npm install --ignore-scripts
+
+# 2) 配置（复制模板后填写）
 cp .env.example .env.local
-# 编辑 .env.local，填入：
+# 编辑 .env.local：
 #   MAGPIE_BASE_URL=http://127.0.0.1:3425/v1
 #   MAGPIE_API_KEY=magpie
-#   MAGPIE_MODEL=auto/deepseek-v4.1-flash
+#   MAGPIE_MODEL=auto/deepseek-v4.1-flash   # 换成你 magpie 里的任一 provider/model
+#   MAGPIE_MOCK=0
+
+# 3) 启动
 npm run dev -- -H 127.0.0.1
-# 打开 http://127.0.0.1:3000
+# 浏览器打开 http://127.0.0.1:3000
 ```
 
-更多细节见 **[docs/MAGPIE_INTEGRATION.md](./docs/MAGPIE_INTEGRATION.md)**。
+### 验证 magpie 是否就绪
+```bash
+curl http://127.0.0.1:3425/v1/models -H "Authorization: Bearer magpie"
+```
+返回一串 `provider/model` 即正常；把其中任意一个填到 `MAGPIE_MODEL` 即可。
+
+### 常见问题
+- **端口被占用**：改用 `npm run dev -- -H 127.0.0.1 -p 3001`，访问 `http://127.0.0.1:3001`。
+- **`npm install` 报 `EPERM` / `spawn`**：多见于受限沙箱，可改 `npm install --ignore-scripts`，或在你自己的普通终端里安装。
+- **AI 提示"未配置 magpie"**：多为 `.env.local` 没填全，或 magpie 没启动（检查 3425 端口）。
+- **模型名写错**：用上面 `curl /v1/models` 返回的 `provider/model` 原样填入。
+
+详细步骤见 **[docs/MAGPIE_INTEGRATION.md](./docs/MAGPIE_INTEGRATION.md)**。
 
 ---
 
