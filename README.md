@@ -1,6 +1,8 @@
 > [!IMPORTANT]
 > **本仓库是 [Renhuai123/ziwei-doushu](https://github.com/Renhuai123/ziwei-doushu) 的二次开发版（Fork）**：补齐了 AI 后端接口，接入 [magpie](https://github.com/yetone/magpie) 本地模型网关，支持**应用内一键切换模型**，并优化了起盘表单与解读面板体验。
 > 👉 安装与使用详见 **[docs/MAGPIE_INTEGRATION.md](./docs/MAGPIE_INTEGRATION.md)**。（原开源版不含 AI；命理内容仅供参考。）
+>
+> **项目性质**：本仓库为**个人学习 / 自用**目的的二次开发，**非官方、非商业，与原作者（Renhuai123/ziwei-doushu）及 magpie 作者均无隶属或背书关系**；遵守并保留上游 MIT 等许可与署名。命理内容仅供传统文化学习与参考，不构成任何专业建议。如有侵权或不妥，请通过 Issue 联系，我会立即修改或删除。
 
 <div align="center">
 
