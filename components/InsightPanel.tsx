@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ZiweiChart, Palace } from '@/lib/ziwei/types';
 import type { TimeView } from './TimeNav';
+import ModelPicker from '@/components/ModelPicker';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -193,10 +194,13 @@ export default function InsightPanel({ chart, selectedPalace, selectedSiHua }: I
   const lastPalaceBranch = useRef<number | undefined>(undefined);
   const lastSiHuaKey = useRef<string | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const cacheRef = useRef<Record<string, Message[]>>({}); // 每个话题/宫位/四化各自独立的会话缓存
 
   // Keep refs in sync
   useEffect(() => { messagesRef.current = messages; }, [messages]);
   useEffect(() => { loadingRef.current = loading; }, [loading]);
+  // 把当前显示的消息同步进当前会话缓存，切换话题时直接还原、不再无限累加
+  useEffect(() => { cacheRef.current[activeTopic] = messages; }, [messages, activeTopic]);
 
   // Auto-scroll
   useEffect(() => {
@@ -237,7 +241,7 @@ ${selectedPalace.name}在命盘中的意义，以及这种星曜配置的整体�
 **【实际建议】**
 基于此宫的具体建议。`;
 
-    sendMessage(prompt, true);
+    openSession(`palace:${selectedPalace.branch}`, prompt);
   }, [selectedPalace]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 注入四化飞化分析
@@ -271,7 +275,7 @@ ${selectedSiHua.starName}化${selectedSiHua.siHua}落在【${palaceName}】，�
 **【实际建议】**
 基于此四化的具体可操作建议。`;
 
-    sendMessage(prompt, true);
+    openSession(`sihua:${key}`, prompt);
   }, [selectedSiHua]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const streamResponse = async (apiMessages: { role: 'user' | 'assistant'; content: string }[]) => {
@@ -336,10 +340,34 @@ ${selectedSiHua.starName}化${selectedSiHua.siHua}落在【${palaceName}】，�
     streamResponse(apiMessages);
   };
 
+  // 在「独立会话」里生成回复（话题/宫位/四化各一份，互不累加）
+  const generateIn = (key: string, text: string, base: Message[]) => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    setLoading(true);
+    const userMsg: Message = { role: 'user', content: text, hidden: true };
+    const next = [...base, userMsg];
+    setMessages(next);
+    cacheRef.current[key] = next;
+    const apiMessages = next.map((m) => ({ role: m.role, content: m.content }));
+    streamResponse(apiMessages);
+  };
+
+  const openSession = (key: string, prompt: string) => {
+    if (loadingRef.current) return;
+    const cached = cacheRef.current[key];
+    setActiveTopic(key);
+    if (cached && cached.length) {
+      setMessages(cached); // 已生成过：直接切换显示，不重复请求
+      return;
+    }
+    setMessages([]);
+    generateIn(key, prompt, []);
+  };
+
   const handleTopicClick = (topicKey: string) => {
     if (loadingRef.current) return;
-    setActiveTopic(topicKey);
-    sendMessage(TOPIC_PROMPTS[topicKey], true);
+    openSession(topicKey, TOPIC_PROMPTS[topicKey]);
   };
 
   const handleSend = () => {
@@ -351,6 +379,10 @@ ${selectedSiHua.starName}化${selectedSiHua.siHua}落在【${palaceName}】，�
 
       {/* ── Topic buttons ── */}
       <div className="flex-shrink-0 px-2 pt-2.5 pb-2" style={{ borderBottom: '1px solid var(--t-border)' }}>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[10px] tracking-widest" style={{ color: 'var(--t-gold)' }}>AI 命盘解读</span>
+          <ModelPicker />
+        </div>
         <div className="grid grid-cols-6 gap-1">
           {TOPICS.map(t => {
             const isActive = activeTopic === t.key;

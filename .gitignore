@@ -7,3 +7,9 @@ dist/
 *.tsbuildinfo
 .DS_Store
 node_modules
+
+# 运行时生成的模型选择配置
+data/
+
+# 内部 AI 助手任务简报（不发布）
+/CLAUDE.md

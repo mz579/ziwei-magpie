@@ -5,6 +5,7 @@ import type { BirthInfo } from '@/lib/ziwei/types';
 import { SHICHEN } from '@/lib/ziwei/constants';
 import { useTheme } from '@/components/ThemeProvider';
 import { PROVINCES } from '@/lib/ziwei/cities';
+import SelectMenu from '@/components/SelectMenu';
 
 export interface BirthFormState {
   name: string;
@@ -45,6 +46,17 @@ function isValidDate(y: number, m: number, d: number): boolean {
   if (!y || !m || !d) return false;
   const date = new Date(y, m - 1, d);
   return date.getFullYear() === y && date.getMonth() === m - 1 && date.getDate() === d;
+}
+
+/** 某年某月有多少天（自动处理 28/29/30/31 与闰年） */
+function daysInMonth(y: number, m: number): number {
+  if (!m) return 31;
+  if (!y) {
+    // 还没选年份时：2 月先给 29（可能是闰年），其余按固定天数
+    if (m === 2) return 29;
+    return [4, 6, 9, 11].includes(m) ? 30 : 31;
+  }
+  return new Date(y, m, 0).getDate(); // m 是 1-12；取"下个月第 0 天"=本月最后一天
 }
 
 export default function BirthForm({ onSubmit, loading, initialData, onFormSave, hideSubmit }: BirthFormProps) {
@@ -95,6 +107,7 @@ export default function BirthForm({ onSubmit, loading, initialData, onFormSave, 
   const y = parseInt(form.year) || 0;
   const m = parseInt(form.month) || 0;
   const d = parseInt(form.day) || 0;
+  const maxDay = daysInMonth(y, m); // 当前年月的实际天数（闰年 2 月=29）
 
   const errors = {
     year: !form.year ? '请选择出生年份'
@@ -126,6 +139,16 @@ export default function BirthForm({ onSubmit, loading, initialData, onFormSave, 
         form.gender === 'male' ? '男' : '女',
       ].filter(Boolean).join(' · ')
     : '';
+
+  // 切换年/月时，若原来的"日"超出该月天数则清空（如 1/31 切到 2 月自动置空）
+  const updateDate = (patch: { year?: string; month?: string }) => {
+    const merged = { ...form, ...patch };
+    const yy = parseInt(merged.year) || 0;
+    const mm = parseInt(merged.month) || 0;
+    const maxD = daysInMonth(yy, mm);
+    const dd = merged.day && parseInt(merged.day) > maxD ? '' : merged.day;
+    setForm({ ...merged, day: dd });
+  };
 
   const handleProvince = (prov: string) => {
     const provData = PROVINCES.find(p => p.name === prov);
@@ -244,45 +267,33 @@ export default function BirthForm({ onSubmit, loading, initialData, onFormSave, 
         <label style={{ display: 'block', fontSize: '11px', color: labelClr, marginBottom: '6px', letterSpacing: '0.05em' }}>出生日期（公历）</label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
           <div>
-            <select
+            <SelectMenu
               value={form.year}
-              onChange={e => { setForm({ ...form, year: e.target.value }); setTouched(t => ({ ...t, year: true })); }}
+              placeholder="年份"
+              onChange={v => { updateDate({ year: v }); setTouched(t => ({ ...t, year: true })); }}
               style={showErr('year') && errors.year ? errorInputStyle : inputStyle}
-              required
-            >
-              <option value="">年份</option>
-              {Array.from({ length: 127 }, (_, i) => 2026 - i).map(yr => (
-                <option key={yr} value={String(yr)}>{yr}</option>
-              ))}
-            </select>
+              options={Array.from({ length: 127 }, (_, i) => { const yr = String(2026 - i); return { value: yr, label: yr + ' 年' }; })}
+            />
             <FieldError msg={showErr('year') ? errors.year : ''} />
           </div>
           <div>
-            <select
+            <SelectMenu
               value={form.month}
-              onChange={e => { setForm({ ...form, month: e.target.value }); setTouched(t => ({ ...t, month: true })); }}
+              placeholder="月份"
+              onChange={v => { updateDate({ month: v }); setTouched(t => ({ ...t, month: true })); }}
               style={showErr('month') && errors.month ? errorInputStyle : inputStyle}
-              required
-            >
-              <option value="">月份</option>
-              {Array.from({ length: 12 }, (_, i) => i + 1).map(mo => (
-                <option key={mo} value={String(mo)}>{mo} 月</option>
-              ))}
-            </select>
+              options={Array.from({ length: 12 }, (_, i) => { const mo = String(i + 1); return { value: mo, label: mo + ' 月' }; })}
+            />
             <FieldError msg={showErr('month') ? errors.month : ''} />
           </div>
           <div>
-            <select
+            <SelectMenu
               value={form.day}
-              onChange={e => { setForm({ ...form, day: e.target.value }); setTouched(t => ({ ...t, day: true })); }}
+              placeholder="日期"
+              onChange={v => { setForm({ ...form, day: v }); setTouched(t => ({ ...t, day: true })); }}
               style={showErr('day') && errors.day ? errorInputStyle : inputStyle}
-              required
-            >
-              <option value="">日期</option>
-              {Array.from({ length: 31 }, (_, i) => i + 1).map(dy => (
-                <option key={dy} value={String(dy)}>{dy} 日</option>
-              ))}
-            </select>
+              options={Array.from({ length: maxDay }, (_, i) => { const dy = String(i + 1); return { value: dy, label: dy + ' 日' }; })}
+            />
             <FieldError msg={showErr('day') ? errors.day : ''} />
           </div>
         </div>
@@ -292,31 +303,21 @@ export default function BirthForm({ onSubmit, loading, initialData, onFormSave, 
       <div style={{ marginBottom: '16px' }}>
         <label style={{ display: 'block', fontSize: '11px', color: labelClr, marginBottom: '6px', letterSpacing: '0.05em' }}>出生地点（用于真太阳时校正）</label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          <select
+          <SelectMenu
             value={form.province}
-            onChange={e => handleProvince(e.target.value)}
+            placeholder="省份 / 直辖市"
+            onChange={v => handleProvince(v)}
             style={inputStyle}
-            onFocus={e => { e.target.style.borderColor = focusBorder; }}
-            onBlur={e => { e.target.style.borderColor = inputBorder; }}
-          >
-            <option value="">省份 / 直辖市</option>
-            {PROVINCES.map(p => (
-              <option key={p.name} value={p.name}>{p.name}</option>
-            ))}
-          </select>
-          <select
+            options={PROVINCES.map(p => ({ value: p.name, label: p.name }))}
+          />
+          <SelectMenu
             value={form.city}
-            onChange={e => handleCity(e.target.value)}
+            placeholder={form.province ? '城市' : '先选省份'}
+            onChange={v => handleCity(v)}
             disabled={!form.province}
             style={{ ...inputStyle, opacity: form.province ? 1 : 0.45 }}
-            onFocus={e => { e.target.style.borderColor = focusBorder; }}
-            onBlur={e => { e.target.style.borderColor = inputBorder; }}
-          >
-            <option value="">{form.province ? '城市' : '先选省份'}</option>
-            {cityList.map(c => (
-              <option key={c.name} value={c.name}>{c.name}</option>
-            ))}
-          </select>
+            options={cityList.map(c => ({ value: c.name, label: c.name }))}
+          />
         </div>
         <AnimatePresence mode="wait">
           {form.province ? (
@@ -348,24 +349,18 @@ export default function BirthForm({ onSubmit, loading, initialData, onFormSave, 
         <label style={{ display: 'block', fontSize: '11px', color: labelClr, marginBottom: '6px', letterSpacing: '0.05em' }}>出生时间（北京时间）</label>
         <div style={{ borderRadius: '14px', padding: '12px', background: panelBg, border: `1px solid ${panelBorder}`, opacity: form.unknownTime ? 0.45 : 1, pointerEvents: form.unknownTime ? 'none' : 'auto', transition: 'opacity 0.2s' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '8px' }}>
-            <select
+            <SelectMenu
               value={form.clockHour}
-              onChange={e => setForm({ ...form, clockHour: e.target.value })}
+              onChange={v => setForm({ ...form, clockHour: v })}
               style={inputStyle}
-            >
-              {Array.from({ length: 24 }, (_, i) => i).map(h => (
-                <option key={h} value={String(h)}>{h.toString().padStart(2, '0')} 时</option>
-              ))}
-            </select>
-            <select
+              options={Array.from({ length: 24 }, (_, i) => { const v = String(i); return { value: v, label: v.padStart(2, '0') + ' 时' }; })}
+            />
+            <SelectMenu
               value={form.clockMinute}
-              onChange={e => setForm({ ...form, clockMinute: e.target.value })}
+              onChange={v => setForm({ ...form, clockMinute: v })}
               style={inputStyle}
-            >
-              {Array.from({ length: 60 }, (_, i) => i).map(min => (
-                <option key={min} value={String(min)}>{min.toString().padStart(2, '0')} 分</option>
-              ))}
-            </select>
+              options={Array.from({ length: 60 }, (_, i) => { const v = String(i); return { value: v, label: v.padStart(2, '0') + ' 分' }; })}
+            />
           </div>
           {/* 真太阳时结果 */}
           <div style={{ textAlign: 'center', padding: '4px 0' }}>

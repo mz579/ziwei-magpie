@@ -6,6 +6,7 @@ import { formToBirthInfo } from '@/lib/ziwei/share';
 import { generateChart as buildChart } from '@/lib/ziwei/algorithm';
 import type { BirthInfo, ZiweiChart } from '@/lib/ziwei/types';
 import { useTheme } from '@/components/ThemeProvider';
+import ModelPicker from '@/components/ModelPicker';
 
 // ─── AiContent 渲染器（与 InsightPanel 一致）────────────────
 function AiContent({ text, streaming }: { text: string; streaming?: boolean }) {
@@ -183,6 +184,7 @@ export default function HemingPage() {
         <div style={{ width: '1px', height: '20px', background: 'var(--bdr-med)' }} />
         <span style={{ fontSize: '12px', color: 'var(--ac)', letterSpacing: '0.2em' }}>合盘分析</span>
         <div style={{ flex: 1 }} />
+        <ModelPicker />
         <span style={{ fontSize: '11px', color: 'var(--tx-3)' }}>感情 · 合伙 · 亲子 · 朋友</span>
       </header>
 

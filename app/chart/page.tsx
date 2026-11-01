@@ -64,11 +64,16 @@ export default function ChartPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 380px)',
-          gap: 20, marginTop: 16, alignItems: 'start',
+          gap: 20, marginTop: 16, alignItems: 'stretch',
+          height: 'calc(100vh - 160px)', minHeight: 520,
         }}
       >
-        <ChartBoard chart={chart} onPalaceSelect={setSelectedPalace} />
-        <InsightPanel chart={chart} selectedPalace={selectedPalace} />
+        <div style={{ height: '100%', minHeight: 0, overflowY: 'auto' }}>
+          <ChartBoard chart={chart} onPalaceSelect={setSelectedPalace} />
+        </div>
+        <div style={{ height: '100%', minHeight: 0, overflow: 'hidden' }}>
+          <InsightPanel chart={chart} selectedPalace={selectedPalace} />
+        </div>
       </div>
     </main>
   );
