@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import BirthForm, { type BirthFormState } from '@/components/BirthForm';
 import { formToBirthInfo } from '@/lib/ziwei/share';
@@ -69,6 +69,15 @@ export default function HemingPage() {
   const [apiMissing, setApiMissing] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const analysisRef = useRef<HTMLDivElement>(null);
+  const questionRef = useRef<HTMLTextAreaElement>(null);
+
+  // 追问输入框自动增高（多行显示，方便检查输入）
+  useEffect(() => {
+    const el = questionRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 128) + 'px';
+  }, [question]);
 
   // ─── 起盘（单次调用，返回 chart 给统一流程使用）──────────
   // 开源版不含后端 /api/generate：直接用本仓库的排盘引擎在浏览器里起盘
@@ -331,16 +340,17 @@ export default function HemingPage() {
             </div>
 
             {/* 输入框 + 追问按钮 */}
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input
-                type="text"
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+              <textarea
+                ref={questionRef}
+                rows={1}
                 value={question}
                 onChange={e => setQuestion(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !analyzing) runAnalysis(question || undefined); }}
-                placeholder="继续追问，如：哪几年是两人感情关键期？"
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!analyzing) runAnalysis(question || undefined); } }}
+                placeholder="继续追问，如：哪几年是两人感情关键期？（Enter 发送，Shift+Enter 换行）"
                 disabled={analyzing}
                 className="input-base"
-                style={{ fontSize: '13px', flex: 1 }}
+                style={{ fontSize: '13px', flex: 1, minHeight: 40, maxHeight: 128, lineHeight: 1.6, resize: 'none', overflowY: 'auto' }}
               />
               <button
                 onClick={() => runAnalysis(question || undefined)}

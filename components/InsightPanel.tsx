@@ -196,6 +196,15 @@ export default function InsightPanel({ chart, selectedPalace, selectedSiHua }: I
   const lastSiHuaKey = useRef<string | undefined>(undefined);
   const scrollRef = useRef<HTMLDivElement>(null);
   const cacheRef = useRef<Record<string, Message[]>>({}); // 每个话题/宫位/四化各自独立的会话缓存
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // 追问输入框自动增高（多行显示，方便检查输入）
+  useEffect(() => {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 128) + 'px';
+  }, [input]);
 
   // ── 「命盘速览」：从命盘数据本地计算，用于空状态展示（不调用模型）──
   const mingPalace = chart.palaces.find((p) => p.branch === chart.mingGongBranch);
@@ -462,19 +471,30 @@ export default function InsightPanel({ chart, selectedPalace, selectedSiHua }: I
             ⚡ 生成完整报告
           </button>
         </div>
-        <div className="flex gap-2">
-          <input
-            type="text"
+        <div className="flex gap-2 items-end">
+          <textarea
+            ref={taRef}
+            rows={1}
             value={input}
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder="继续追问，如：今年适合换工作吗？"
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder="继续追问…（Enter 发送，Shift+Enter 换行）"
             disabled={loading}
             className="flex-1 rounded-lg px-3 py-2 text-[11px] focus:outline-none transition-colors"
             style={{
               background: 'var(--t-card)',
               border: '1px solid var(--t-border)',
               color: 'var(--t-text)',
+              minHeight: '34px',
+              maxHeight: '128px',
+              lineHeight: 1.6,
+              resize: 'none',
+              overflowY: 'auto',
             }}
           />
           <button
