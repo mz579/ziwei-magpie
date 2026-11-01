@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ZiweiChart, Palace } from '@/lib/ziwei/types';
 import type { TimeView } from './TimeNav';
+import { BRANCHES } from '@/lib/ziwei/constants';
 import ModelPicker from '@/components/ModelPicker';
 
 interface Message {
@@ -196,6 +197,16 @@ export default function InsightPanel({ chart, selectedPalace, selectedSiHua }: I
   const scrollRef = useRef<HTMLDivElement>(null);
   const cacheRef = useRef<Record<string, Message[]>>({}); // 每个话题/宫位/四化各自独立的会话缓存
 
+  // ── 「命盘速览」：从命盘数据本地计算，用于空状态展示（不调用模型）──
+  const mingPalace = chart.palaces.find((p) => p.branch === chart.mingGongBranch);
+  const mingStars =
+    (mingPalace?.stars ?? [])
+      .filter((s) => s.type === 'major')
+      .map((s) => `${s.name}${s.brightnessRaw ? `(${s.brightnessRaw})` : ''}${s.siHua ? `化${s.siHua}` : ''}`)
+      .join('、') || '空宫';
+  const curDaXian = chart.daXians?.[chart.currentDaXianIndex];
+  const fourPillars = chart.lunarInfo?.fourPillars?.join(' ');
+
   // Keep refs in sync
   useEffect(() => { messagesRef.current = messages; }, [messages]);
   useEffect(() => { loadingRef.current = loading; }, [loading]);
@@ -368,11 +379,24 @@ export default function InsightPanel({ chart, selectedPalace, selectedSiHua }: I
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
 
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center px-6">
-            <div className="text-4xl mb-3" style={{ color: 'var(--t-gold)', opacity: 0.15 }}>✦</div>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--t-faint)' }}>
-              命盘已生成。像请教一位先生那样，直接问你想知道的就好——<br />
-              先给结论，再按你的追问慢慢展开。
+          <div className="h-full flex flex-col justify-center px-4 py-6">
+            <div className="text-center mb-4">
+              <div className="text-3xl mb-2" style={{ color: 'var(--t-gold)', opacity: 0.15 }}>✦</div>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--t-faint)' }}>
+                命盘已生成。像请教一位先生那样，直接问你想知道的就好。
+              </p>
+            </div>
+
+            <div style={{ background: 'var(--t-card)', border: '1px solid var(--t-border)', borderRadius: 10, padding: '12px 14px', fontSize: 12, lineHeight: 1.9, color: 'var(--t-text)' }}>
+              <div style={{ fontSize: 10, letterSpacing: '0.2em', color: 'var(--t-gold)', marginBottom: 6 }}>命盘速览</div>
+              <div>命宫：{BRANCHES[chart.mingGongBranch]}　主星：{mingStars}</div>
+              <div>五行局：{chart.wuxingJuName}　命主：{chart.mingZhu ?? '—'}　身主：{chart.shenZhu ?? '—'}</div>
+              {fourPillars && <div>四柱：{fourPillars}</div>}
+              {curDaXian && <div>当前大限：{curDaXian.startAge}-{curDaXian.endAge}岁 · {curDaXian.palaceName}</div>}
+            </div>
+
+            <p className="text-center mt-3" style={{ fontSize: 10, color: 'var(--t-faint)' }}>
+              ⬆ 点上方话题可快速提问，或直接在下方输入你的问题
             </p>
           </div>
         )}
